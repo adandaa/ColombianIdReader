@@ -1,2 +1,3 @@
-# ColombianIdReader
-Colombian Id Scanner on Flutter
+# Colombian ID Scanner
+
+Created by Adandaa Corp
