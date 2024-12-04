@@ -10,12 +10,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Codes Reader',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.lightBlue),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Colombian Id Reader'),
+      home: const MyHomePage(title: 'Adandaa Code Reader'),
     );
   }
 }
@@ -62,7 +62,7 @@ class _MyHomePageState extends State<MyHomePage> {
           children: <Widget>[
             _buildItem(
               context,
-              'Escanear Cedula',
+              'Escanear Codigo',
               const BarcodeScannerSimple(),
             ),
           ],

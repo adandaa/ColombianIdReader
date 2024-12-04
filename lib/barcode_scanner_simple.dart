@@ -1,9 +1,11 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:mlkit/datamatrixData.dart';
 import 'package:mlkit/personData.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'dart:typed_data';
 
+import 'DataMatrixResultPage.dart';
 import 'Pdf417ResultPage.dart';
 
 class BarcodeScannerSimple extends StatefulWidget {
@@ -38,6 +40,19 @@ class _BarcodeScannerSimpleState extends State<BarcodeScannerSimple> {
         _barcode = barcodes.barcodes.first;
       });
 
+      print(_barcode!.format);
+
+      if(_barcode!.format == BarcodeFormat.dataMatrix){
+
+        DatamatrixData codeData = parseDataMatrix(_barcode!.rawBytes!);
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DataMatrixResultPage(data: codeData),
+          ),
+        );
+
+      } else if (_barcode!.format == BarcodeFormat.pdf417){
       // Check if the raw value is null before navigating
       if (_barcode?.rawBytes != null) {
         PersonData scannedPersonData = parsePersonData(_barcode!.rawBytes!);
@@ -52,10 +67,57 @@ class _BarcodeScannerSimpleState extends State<BarcodeScannerSimple> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Invalid barcode or missing data')),
         );
+        }
       }
     }
   }
 
+
+  DatamatrixData parseDataMatrix(Uint8List data) {
+    // Convert Uint8List to string
+    String rawData = String.fromCharCodes(data);
+
+    // Split data by Group Separator (ASCII 29)
+    List<String> segments = rawData.split(String.fromCharCode(29));
+
+    // Create a map to store parsed AI values
+    Map<String, String> aiMap = {};
+
+    // Parse each segment
+    for (String segment in segments) {
+      if (segment.isEmpty) continue; // Skip empty segments
+
+      // Check segment length to avoid range errors
+      String ai;
+      String value;
+
+      if (segment.length >= 3 && ['40', '91', '92'].contains(segment.substring(0, 2))) {
+        ai = segment.substring(0, 3);
+        value = segment.substring(3);
+      } else if (segment.length >= 2) {
+        ai = segment.substring(0, 2);
+        value = segment.substring(2);
+      } else {
+        // Skip segments that are too short to contain valid data
+        continue;
+      }
+
+      aiMap[ai] = value;
+    }
+
+    // Create and return DatamatrixData object
+    return DatamatrixData(
+      gtin: aiMap['01'] ?? '',
+      numLot: aiMap['10'] ?? '',
+      numSerie: aiMap['21'] ?? '',
+      dateProd: aiMap['11'] ?? '',
+      datePack: aiMap['13'] ?? '',
+      dateExpir: aiMap['17'] ?? '',
+      numOrd: aiMap['400'] ?? '',
+      numAdm: aiMap['91'] ?? '',
+      dateAdm: aiMap['92'] ?? '',
+    );
+  }
 
 
   PersonData parsePersonData(Uint8List bytes) {
